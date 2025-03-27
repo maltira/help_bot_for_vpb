@@ -1,0 +1,25 @@
+import logging
+import os
+
+log_file = "logs/bot.log"
+
+def clean_logs(max_lines):
+    # Очищает лог, если строк больше max_lines
+    if os.path.exists(log_file):
+        with open(log_file, "r", encoding="utf-8") as f:
+            lines = f.readlines()
+
+        if len(lines) > max_lines:
+            with open(log_file, "w", encoding="utf-8") as f:
+                f.writelines(lines[-max_lines:])  # Оставляем последние 10 000 строк
+
+# Настройка логгера
+logging.basicConfig(
+    filename="logs/bot.log",  # Путь к файлу логов
+    level=logging.INFO,  # Уровень логирования (DEBUG, INFO, WARNING, ERROR, CRITICAL)
+    format="%(asctime)s - %(levelname)s - %(message)s",
+    datefmt="%Y-%m-%d %H:%M:%S",
+    encoding="utf-8"  # Указываем кодировку UTF-8,
+)
+logging.getLogger("aiogram").setLevel(logging.WARNING)  # Показывать только предупреждения и ошибки
+logger = logging.getLogger(__name__)
