@@ -11,10 +11,6 @@ DB_NAME = os.getenv('DB_NAME')
 DB_PASS = os.getenv('DB_PASS')
 DB_HOST = os.getenv('DB_HOST')
 DB_PORT = os.getenv('DB_PORT')
-RDS_PASS = os.getenv('RDS_PASS')
-RDS_ADDRESS=os.getenv('RDS_ADDRESS')
-RDS_PORT = os.getenv('RDS_PORT')
-
 
 
 class Database:
@@ -85,18 +81,33 @@ class Database:
 
 
 
+    # Получить тикет по id пользователя
+    async def get_ticket_by_uid(self, uid):
+        async with self.pool.acquire() as conn:
+            try:
+                t = await conn.fetchrow("SELECT * FROM tickets WHERE sender_id=$1 AND status=$2", uid, 'open')
+                return {'status': True, 'ticket': t}
+            except Exception as err:
+                logger.error(f"Не удалось получить последний тикет: {err}")
+                return {'status': False, 'error': err}
+
+
     # Создать тикет
-    async def create_ticket(self, ticket_id, sender, message):
+    async def create_ticket(self, sender, message):
         async with self.pool.acquire() as conn:
             try:
                 now_date = datetime.now(timezone.utc)
-                await conn.execute("INSERT INTO tickets (sender_id, status, created_at, closed_at, message) VALUES ($1,$2,$3,$4,$5)",
-                                    sender, 'open', now_date, None, message)
-
-                logger.info(f"Тикет №{ticket_id} создан пользователем {sender}")
-                return {'status': True}
+                res = await conn.fetchrow('SELECT * FROM tickets WHERE sender_id=$1 AND status=$2', sender, 'open')
+                if not res:
+                    r = await conn.execute("INSERT INTO tickets (sender_id, status, created_at, closed_at, message) VALUES ($1,$2,$3,$4,$5)",
+                                        sender, 'open', now_date, None, message)
+                    res = await conn.fetchrow('SELECT * FROM tickets WHERE sender_id=$1 AND status=$2', sender, 'open')
+                    logger.info(f"Тикет создан пользователем {sender}")
+                    return {'status': True, 'id': res['id']}
+                else:
+                    return {'status': False, 'error': 'duplicate'}
             except Exception as err:
-                logger.error(f"Не удалось cоздать тикет ({ticket_id}): {err}")
+                logger.error(f"Не удалось cоздать тикет: {err}")
                 return {'status': False, 'error': err}
 
 

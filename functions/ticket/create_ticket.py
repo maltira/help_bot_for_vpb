@@ -2,7 +2,7 @@ from aiogram import Router
 from aiogram.fsm.context import FSMContext
 from aiogram.fsm.state import StatesGroup, State
 from aiogram.types import CallbackQuery, InlineKeyboardButton, InlineKeyboardMarkup, Message
-from config import ADMIN_ID, db
+from config import ADMIN_ID, db, bot
 from functions.ticket.log_ticket import log_ticket_message
 
 router = Router()
@@ -31,21 +31,16 @@ async def create_ticket(callback_query: CallbackQuery, state: FSMContext):
 
 # Обработчки сообщения от пользователя (описание проблемы)
 @router.message(MessageState.waiting_for_message)
-async def process_promo_code(message: Message, state: FSMContext):
+async def wait_question(message: Message, state: FSMContext):
     uid = message.from_user.id
     bt1 = InlineKeyboardButton(text="◀️ Главное меню", callback_data='start')
 
-    last_ticket = await db.get_last_ticket()
-    if last_ticket['status'] and last_ticket['ticket'] is not None:
-        free_id = last_ticket['ticket']['id'] + 1
-    else: free_id = 1;
-    n = '0' * (5 - len(str(free_id))) + str(free_id)
-
-    res = await db.create_ticket(free_id, uid, message.text.strip())
+    res = await db.create_ticket(uid, message.text.strip())
     if res['status']:
+        n = '0' * (5 - len(str(res['id']))) + str(res['id'])
         log_ticket_message(n, message)
-        bt2 = InlineKeyboardButton(text="❌ Закрыть тикет", callback_data=f'close-ticket_{free_id}')
-        # Создать файл
+        bt2 = InlineKeyboardButton(text="❌ Закрыть тикет", callback_data=f'close-ticket_{res['id']}')
+
         await message.answer(
             f'📄 *Тикет №{n}*\n'
             f'```\n{message.text}\n```'
@@ -55,14 +50,24 @@ async def process_promo_code(message: Message, state: FSMContext):
             reply_markup=InlineKeyboardMarkup(inline_keyboard=[[bt2], [bt1]]),
             parse_mode='Markdown'
         )
-
-    else:
-        await message.answer(
-            f'❌ *Тикет №{n}*\n'
-            f'```\n{message.text}\n```'
-            'Непредвиденная ошибка: не получилось создать обращение, такое случается редко, напиши администратору @sselanium\n\n',
-            reply_markup=InlineKeyboardMarkup(inline_keyboard=[[bt1]]),
+        await bot.send_message(
+            chat_id=ADMIN_ID,
+            text=f'Новый тикет №{res['id']}\n```\n{message.text}\n```',
             parse_mode='Markdown'
         )
+
+    else:
+        if res['error'] == 'duplicate':
+            await message.answer(
+                f'❌ Нельзя создать новый тикет, пока не завершен другой\n\nНапиши администратору @sselanium, если считаешь, что это ошибка',
+                reply_markup=InlineKeyboardMarkup(inline_keyboard=[[bt1]]),
+            )
+        else:
+            await message.answer(
+                f'```\n{message.text}\n```'
+                '❌ Непредвиденная ошибка: не получилось создать обращение, такое случается редко, напиши администратору @sselanium\n\n',
+                reply_markup=InlineKeyboardMarkup(inline_keyboard=[[bt1]]),
+                parse_mode='Markdown'
+            )
     # Сбрасываем состояние
     await state.clear()

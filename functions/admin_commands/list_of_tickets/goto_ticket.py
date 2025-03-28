@@ -13,12 +13,12 @@ async def all_tickets(callback_query: CallbackQuery):
         ticket_id = int(callback_query.data.split('_')[1])
         bt1 = InlineKeyboardButton(text='◀️ Назад', callback_data='list-tickets')
         bt2 = InlineKeyboardButton(text="Закрыть тикет", callback_data=f'close-ticket_{ticket_id}')
-        bt3 = InlineKeyboardButton(text="Ответить", callback_data=f'close-ticket_{ticket_id}')
         n = '0' * (5 - len(str(ticket_id))) + str(ticket_id)
         ticket = await db.get_ticket(ticket_id)
 
         if ticket['status']:
             ticket = ticket['ticket']
+            bt3 = InlineKeyboardButton(text="Начать диалог", callback_data=f'create-dialog_{ticket_id}_{ticket['sender_id']}')
             await callback_query.message.edit_text(
                 f'*Тикет №{n}*\n'
                 f'```\n{ticket['message']}\n```'
