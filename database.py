@@ -73,11 +73,11 @@ class Database:
 
 
 
-    # Получить последний тикет
-    async def get_last_ticket(self):
+    # Получить тикет по id
+    async def get_ticket(self, ticket_id):
         async with self.pool.acquire() as conn:
             try:
-                t = await conn.fetchrow("SELECT * FROM tickets ORDER BY id DESC LIMIT 1")
+                t = await conn.fetchrow("SELECT * FROM tickets WHERE id=$1", ticket_id)
                 return {'status': True, 'ticket': t}
             except Exception as err:
                 logger.error(f"Не удалось получить последний тикет: {err}")

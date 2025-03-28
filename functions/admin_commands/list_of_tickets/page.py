@@ -2,7 +2,7 @@ from aiogram import Router
 from aiogram.types import CallbackQuery, InlineKeyboardMarkup
 
 from config import db
-from functions.ticket.admin_commands.list_of_tickets.list_all_tickets import generate_buttons
+from functions.admin_commands.list_of_tickets.list_all_tickets import generate_buttons
 
 router = Router()
 
