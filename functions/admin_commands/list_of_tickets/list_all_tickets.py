@@ -42,7 +42,7 @@ async def all_tickets(callback_query: CallbackQuery):
 
     if str(uid) == ADMIN_ID:
         back = InlineKeyboardButton(text='В меню', callback_data='menu')
-        all_tic = await db.get_open_ticket()
+        all_tic = await db.get_tickets('open')
         if all_tic['status']:
             if all_tic['list']:
                 buttons = generate_buttons(all_tic['list'])

@@ -6,6 +6,7 @@ from database import Database
 load_dotenv()
 BOT_TOKEN=os.getenv('BOT_TOKEN')
 ADMIN_ID = os.getenv("ADMIN_ID")
+BOT_ID = os.getenv('BOT_ID')
 DB = os.getenv('DB')
 DB_NAME = os.getenv('DB_NAME')
 DB_PASS = os.getenv('DB_PASS')

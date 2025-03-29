@@ -5,6 +5,8 @@ from aiogram.types import BotCommand
 from config import db, bot, dp
 
 import router
+from functions.daily_check import daily_check
+
 
 async def set_commands():
     commands = [
@@ -18,6 +20,9 @@ async def main():
     await db.connect()
     await bot.delete_webhook(drop_pending_updates=True)
     await set_commands()
+
+    # Проверка
+    asyncio.create_task(daily_check())
 
     print("Технический бот был запущен...")
     await dp.start_polling(bot)

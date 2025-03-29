@@ -9,7 +9,7 @@ router = Router()
 @router.callback_query(lambda c: c.data.startswith('page_'))
 async def cur_page(callback_query: CallbackQuery):
     page = int(callback_query.data.split('_')[1])
-    all_tic = await db.get_open_ticket()
+    all_tic = await db.get_tickets('open')
 
     buttons = generate_buttons(all_tic['list'], page)
     await callback_query.message.edit_text(

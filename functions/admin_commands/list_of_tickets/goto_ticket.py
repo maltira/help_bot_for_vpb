@@ -14,7 +14,6 @@ async def all_tickets(callback_query: CallbackQuery):
         sender_id = int(callback_query.data.split('_')[2])
         bt1 = InlineKeyboardButton(text='◀️ Назад', callback_data='list-tickets')
         bt2 = InlineKeyboardButton(text="Закрыть тикет", callback_data=f'close_{ticket_id}_{sender_id}')
-        n = '0' * (5 - len(str(ticket_id))) + str(ticket_id)
         ticket = await db.get_ticket(int(sender_id))
 
         if ticket['status']:
@@ -22,7 +21,7 @@ async def all_tickets(callback_query: CallbackQuery):
             if ticket is not None:
                 bt3 = InlineKeyboardButton(text="Начать диалог", callback_data=f'create-dialog_{ticket_id}_{ticket['sender_id']}')
                 await callback_query.message.edit_text(
-                    f'*Тикет №{n}*\n'
+                    f'*Тикет №{ticket_id}*\n'
                     f'```\n{ticket['message']}\n```'
                     f'От пользователя: {ticket['sender_id']} [ссылка](tg://user?id={ticket['sender_id']})\n\n'
                     f'🟢 Статус: {ticket['status']}\n\n'

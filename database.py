@@ -162,18 +162,29 @@ class Database:
 
 
     # Получить все открытые тикеты
-    async def get_open_ticket(self, sender_id=0):
+    async def get_tickets(self, status, sender_id=0):
         async with self.pool.acquire() as conn:
             try:
                 if sender_id == 0:
-                    res = await conn.fetch('SELECT * FROM tickets WHERE status=$1', 'open')
+                    res = await conn.fetch('SELECT * FROM tickets WHERE status=$1', status)
                 else:
-                    res = await conn.fetchrow('SELECT * FROM tickets WHERE sender_id=$1 AND status=$2', sender_id, 'open')
+                    res = await conn.fetchrow('SELECT * FROM tickets WHERE sender_id=$1 AND status=$2', sender_id, status)
                 return {'status': True, 'list': res}
             except Exception as err:
-                logger.error(f"Не удалось получить список тикетов: {err}")
+                logger.error(f"Не удалось получить список открытых тикетов: {err}")
                 return {'status': False, 'error': err}
 
+
+
+    # Получить все закрытые тикеты
+    async def get_closed_tickets(self):
+        async with self.pool.acquire() as conn:
+            try:
+                res = await conn.fetch('SELECT * FROM tickets WHERE status=$1', 'сlosed')
+                return {'status': True, 'list': res}
+            except Exception as err:
+                logger.error(f"Не удалось получить список закрытых тикетов: {err}")
+                return {'status': False, 'error': err}
 
 
     async def close(self):

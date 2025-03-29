@@ -10,7 +10,7 @@ async def my_tickets(callback_query: CallbackQuery):
     uid = callback_query.from_user.id
     access = await db.get_bot_mode()
     if access['mode'] == 'activate' or str(uid) == ADMIN_ID:
-        data = await db.get_open_ticket(uid)
+        data = await db.get_tickets('open', uid)
         buttons = []
         if data['status']:
             data = data['list']

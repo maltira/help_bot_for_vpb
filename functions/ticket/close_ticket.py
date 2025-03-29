@@ -1,7 +1,7 @@
 from aiogram import Router
 from aiogram.types import CallbackQuery, InlineKeyboardButton, InlineKeyboardMarkup
 
-from config import db, ADMIN_ID
+from config import db, ADMIN_ID, bot
 from functions.ticket.log_ticket import log_ticket_message
 
 router = Router()
@@ -16,16 +16,19 @@ async def close_ticket(callback_query: CallbackQuery):
         ticket_id = callback_query.data.split('_')[1]
         res = await db.close_ticket(callback_query.from_user.id, int(ticket_id))
 
-        n = '0' * (5 - len(ticket_id)) + ticket_id
         if res['status']:
-
-            res = await callback_query.message.edit_text(
-                f'✅ *Тикет №{n}*\n'
+            mes = await callback_query.message.edit_text(
+                f'✅ *Тикет №{ticket_id}*\n'
                 'Вы успешно закрыли тикет, если возникнут другие вопросы — создайте новый тикет',
                 reply_markup=InlineKeyboardMarkup(inline_keyboard=[[bt1]]),
                 parse_mode='Markdown'
             )
-            log_ticket_message(n, res)
+            await bot.send_message(
+                chat_id=ADMIN_ID,
+                text=f'[Пользователь](tg://user?id={uid}) *закрыл тикет №{ticket_id}*',
+                parse_mode='Markdown',
+            )
+            log_ticket_message(ticket_id, mes)
         else:
             bt2 = InlineKeyboardButton(text="❌ Закрыть тикет", callback_data=f'close-ticket_{ticket_id}')
             await callback_query.message.edit_text(

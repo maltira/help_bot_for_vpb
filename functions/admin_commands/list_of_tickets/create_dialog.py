@@ -7,6 +7,7 @@ from aiogram.fsm.state import StatesGroup, State
 from aiogram.types import CallbackQuery, InlineKeyboardButton, InlineKeyboardMarkup, Message
 
 from config import ADMIN_ID, bot, db
+from functions.admin_commands.list_of_tickets.get_chat_history import get_chat_history
 from functions.ticket.log_ticket import log_ticket_message
 
 router = Router()
@@ -33,6 +34,9 @@ async def all_tickets(callback_query: CallbackQuery, state: FSMContext):
             parse_mode='Markdown',
             reply_markup=InlineKeyboardMarkup(inline_keyboard=[[bt2], [bt1]])
         )
+
+        await get_chat_history(ticket_id)
+
         global listen_ticket
         listen_ticket = ticket_id
         await state.update_data(sender_id=sender_id, ticket_id=ticket_id)
@@ -47,8 +51,7 @@ async def wait_message(message: Message, state: FSMContext):
     sender_id = data.get('sender_id')
     ticket_id = data.get('ticket_id')
 
-    n = '0' * (5 - len(str(ticket_id))) + str(ticket_id)
-    log_ticket_message(n, message)
+    log_ticket_message(ticket_id, message)
 
     if message.photo:
         await bot.send_photo(sender_id, message.photo[-1].file_id, caption=message.caption or '')
@@ -63,15 +66,22 @@ async def wait_message(message: Message, state: FSMContext):
 
 
 
+def allowed_mes(c):
+    if c.text:
+        if not c.text.startswith('/'):
+            return True
+    elif c.photo or c.video or c.document or c.sticker:
+        return True
+
 # Ловим сообщения от пользователей
-@router.message(lambda c: not c.text.startswith('/'))
+@router.message(lambda c: allowed_mes(c))
 async def wait_message_user(message: Message):
     uid = message.from_user.id
     ticket = await db.get_ticket(uid)
     if ticket['status'] and ticket['ticket']:
         ticket = ticket['ticket']
-        n = '0' * (5 - len(str(ticket['id']))) + str(ticket['id'])
-        log_ticket_message(n, message) # логируем все сообщения пользователей с открытыми тикетами
+
+        log_ticket_message(ticket['id'], message) # логируем все сообщения пользователей с открытыми тикетами
         if ticket['id'] == listen_ticket: # админу отправляем только те сообщения, в чате тикета которого он сидит
             if message.photo:
                 await bot.send_photo(ADMIN_ID, message.photo[-1].file_id, caption=message.caption or '')
@@ -94,23 +104,22 @@ async def close(callback_query: CallbackQuery, state: FSMContext):
     bt1 = InlineKeyboardButton(text="Меню", callback_data='menu')
     res = await db.close_ticket(sender_id, int(ticket_id))
 
-    n = '0' * (5 - len(str(ticket_id))) + str(ticket_id)
     if res['status']:
         await state.clear()
         global listen_ticket
         listen_ticket = None
         await bot.send_message(
             chat_id=sender_id,
-            text=f'Ваш тикет №{n} был закрыт администратором',
+            text=f'Ваш тикет №{ticket_id} был закрыт администратором',
             reply_markup=InlineKeyboardMarkup(inline_keyboard=[[InlineKeyboardButton(text='Главное меню', callback_data='start')]])
         )
         res = await callback_query.message.edit_text(
-            f'✅ *Тикет №{n}*\n'
+            f'✅ *Тикет №{ticket_id}*\n'
             'Вы успешно закрыли тикет',
             reply_markup=InlineKeyboardMarkup(inline_keyboard=[[bt1]]),
             parse_mode='Markdown'
         )
-        log_ticket_message(n, res)
+        log_ticket_message(ticket_id, res)
     else:
         bt2 = InlineKeyboardButton(text="❌ Закрыть тикет", callback_data=f'close_{ticket_id}')
         await callback_query.message.edit_text(
@@ -121,6 +130,8 @@ async def close(callback_query: CallbackQuery, state: FSMContext):
 
     await callback_query.answer()
 
+
+
 # Обработчик сообщения кнопки НАЗАД от админа
 @router.callback_query(lambda c: c.data.startswith('goto_'))
 async def close(callback_query: CallbackQuery, state: FSMContext):
@@ -128,7 +139,6 @@ async def close(callback_query: CallbackQuery, state: FSMContext):
     sender_id = int(callback_query.data.split('_')[2])
     bt1 = InlineKeyboardButton(text='◀️ Назад', callback_data='list-tickets')
     bt2 = InlineKeyboardButton(text="Закрыть тикет", callback_data=f'close-ticket_{ticket_id}')
-    n = '0' * (5 - len(str(ticket_id))) + str(ticket_id)
     ticket = await db.get_ticket(int(sender_id))
 
     if ticket['status']:
@@ -141,7 +151,7 @@ async def close(callback_query: CallbackQuery, state: FSMContext):
             bt3 = InlineKeyboardButton(text="Начать диалог",
                                        callback_data=f'create-dialog_{ticket_id}_{ticket['sender_id']}')
             await callback_query.message.edit_text(
-                f'*Тикет №{n}*\n'
+                f'*Тикет №{ticket_id}*\n'
                 f'```\n{ticket['message']}\n```'
                 f'От пользователя: {ticket['sender_id']} [ссылка](tg://user?id={ticket['sender_id']})\n\n'
                 f'🟢 Статус: {ticket['status']}\n\n'
