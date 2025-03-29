@@ -19,7 +19,7 @@ async def create_ticket(callback_query: CallbackQuery, state: FSMContext):
         bt1 = InlineKeyboardButton(text="◀️ Назад", callback_data='start')
 
         await callback_query.message.edit_text(
-            f'<b>📄 Создание тикета</b>\n\nПеред созданием тикета обратись к разделу <b>FAQ (часто задаваемые вопросы)</b>, быть может, там уже есть ответ на твой вопрос!\n\n<i>Опиши проблему, с которой ты обращаешься:</i>',
+            f'<b>📄 Создание тикета</b>\n\nПеред созданием тикета обратись к разделу <b>FAQ (часто задаваемые вопросы)</b>, быть может, там уже есть ответ на твой вопрос!\n\n<i>Опиши проблему, с которой ты обращаешься (отправь только текст:</i>',
             reply_markup=InlineKeyboardMarkup(inline_keyboard=[[bt1]]),
             parse_mode='HTML'
         )
@@ -34,8 +34,12 @@ async def create_ticket(callback_query: CallbackQuery, state: FSMContext):
 async def wait_question(message: Message, state: FSMContext):
     uid = message.from_user.id
     bt1 = InlineKeyboardButton(text="◀️ Главное меню", callback_data='start')
+    res = {}
+    if message.text:
+        res = await db.create_ticket(uid, message.text.strip())
+    elif message.caption:
+        res = await db.create_ticket(uid, message.caption.strip())
 
-    res = await db.create_ticket(uid, message.text.strip())
     if res['status']:
         n = '0' * (5 - len(str(res['id']))) + str(res['id'])
         log_ticket_message(n, message)
@@ -52,8 +56,11 @@ async def wait_question(message: Message, state: FSMContext):
         )
         await bot.send_message(
             chat_id=ADMIN_ID,
-            text=f'Новый тикет №{res['id']}\n```\n{message.text}\n```',
-            parse_mode='Markdown'
+            text=f'Новый тикет №{res['id']}\n```\n{message.text or message.caption}\n```',
+            parse_mode='Markdown',
+            reply_markup=InlineKeyboardMarkup(inline_keyboard=[[
+                InlineKeyboardButton(text='Перейти к тикету', callback_data=f'goto-ticket_{res['id']}_{uid}')
+            ]])
         )
 
     else:

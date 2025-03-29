@@ -15,7 +15,7 @@ def clean_logs(max_lines):
 
 # Настройка логгера
 logging.basicConfig(
-    filename="logs/bot.log",  # Путь к файлу логов
+    filename="help_bot/logs/bot.log",  # Путь к файлу логов
     level=logging.INFO,  # Уровень логирования (DEBUG, INFO, WARNING, ERROR, CRITICAL)
     format="%(asctime)s - %(levelname)s - %(message)s",
     datefmt="%Y-%m-%d %H:%M:%S",

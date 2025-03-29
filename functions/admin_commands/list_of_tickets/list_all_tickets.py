@@ -18,7 +18,7 @@ def generate_buttons(all_tic, page=1):
     buttons = []
     for ticket in tickets_on_page:
         buttons.append([InlineKeyboardButton(text=f'Тикет №{ticket['id']}',
-                                             callback_data=f'goto-ticket_{ticket['id']}')])
+                                             callback_data=f'goto-ticket_{ticket['id']}_{ticket['sender_id']}')])
 
     nav_buttons = []
     if page_count > 1 and page != 1:
