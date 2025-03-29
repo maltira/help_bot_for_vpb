@@ -99,10 +99,10 @@ async def wait_message_user(message: Message):
 @router.callback_query(lambda c: c.data.startswith('close_'))
 async def close(callback_query: CallbackQuery, state: FSMContext):
     data = await state.get_data()
-    ticket_id = data.get('ticket_id')
-    sender_id = data.get('sender_id')
+    ticket_id = data.get('ticket_id') or int(callback_query.data.split('_')[1])
+    sender_id = data.get('sender_id') or int(callback_query.data.split('_')[2])
     bt1 = InlineKeyboardButton(text="Меню", callback_data='menu')
-    res = await db.close_ticket(sender_id, int(ticket_id))
+    res = await db.close_ticket(sender_id, ticket_id)
 
     if res['status']:
         await state.clear()
