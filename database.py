@@ -95,7 +95,7 @@ class Database:
         try:
             rd_data = await rds.get(str(uid))
             if rd_data is not None:
-                data = json.loads(rd_data) # какая-то невменяемая пробелма с тем, что оно выводит это даже после того как я удалил его
+                data = json.loads(rd_data)
                 return {'status': True, 'ticket': data}
         except Exception as err:
             logger.error(f"Не удалось получить тикет из redis: {err}")
@@ -143,9 +143,7 @@ class Database:
     # Закрыть тикет
     async def close_ticket(self, uid, ticket_id):
         try:
-            res = await rds.get(str(uid))
             await rds.delete(str(uid))
-            res = await rds.get(str(uid))
         except Exception as err:
             logger.error(f'Не удалось удалить {uid} из redis: {err}')
 
