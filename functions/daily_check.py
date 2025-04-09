@@ -9,8 +9,8 @@ async def daily_check():
         today = datetime.now(timezone.utc)
 
         # Очищаем логи, если их больше max_lines
-        clean_logs(10000)
+        clean_logs(25000)
         await clean_tickets(today)
 
         # Ждём 3 часа перед следующей проверкой
-        await asyncio.sleep(3600*3)
+        await asyncio.sleep(3600*6)
