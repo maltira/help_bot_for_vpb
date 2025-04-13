@@ -3,7 +3,7 @@ import json
 from datetime import datetime
 
 def add_to_json(new_entry, ticket_id):
-    filename = f"/root/help_bot/tickets_log/ticket_{ticket_id}/ticket_{ticket_id}.json"
+    filename = f"/home/enemybye/help_bot/tickets_log/ticket_{ticket_id}/ticket_{ticket_id}.json"
     try:
         # Открываем файл и загружаем данные
         with open(filename, "r", encoding="utf-8") as file:
@@ -21,8 +21,8 @@ def add_to_json(new_entry, ticket_id):
 
 def log_ticket_message(ticket_id, message):
     # Создаём папку, если её нет
-    os.makedirs("/root/help_bot/tickets_log", exist_ok=True)
-    os.makedirs(f"/root/help_bot/tickets_log/ticket_{ticket_id}", exist_ok=True)
+    os.makedirs("/home/enemybye/help_bot/tickets_log", exist_ok=True)
+    os.makedirs(f"/home/enemybye/help_bot/tickets_log/ticket_{ticket_id}", exist_ok=True)
 
     timestamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
     data = {
