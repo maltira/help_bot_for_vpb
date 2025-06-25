@@ -12,7 +12,7 @@ async def start_command(message: Message):
     uid = message.from_user.id
     access = await db.get_bot_mode()
     if access['mode'] == 'activate' or str(uid) == ADMIN_ID:
-        username = message.from_user.username
+        username = message.from_user.username or "None"
         bt1 = InlineKeyboardButton(text="📄 Создать тикет", callback_data='create-ticket')
         bt2 = InlineKeyboardButton(text="FAQ", callback_data='faq')
         bt3 = InlineKeyboardButton(text="Мои обращения", callback_data='my-tickets')
@@ -35,7 +35,7 @@ async def start_callback(callback_query: CallbackQuery):
     uid = callback_query.from_user.id
     access = await db.get_bot_mode()
     if access['mode'] == 'activate' or str(uid) == ADMIN_ID:
-        username = callback_query.from_user.username
+        username = callback_query.from_user.username or "None"
         bt1 = InlineKeyboardButton(text="📄 Создать тикет", callback_data='create-ticket')
         bt2 = InlineKeyboardButton(text="FAQ", callback_data='faq')
         bt3 = InlineKeyboardButton(text="Мои обращения", callback_data='my-tickets')
